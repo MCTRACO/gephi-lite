@@ -67,14 +67,16 @@ export function FunctionEditorModal<T>(props: ModalProps<FunctionEditorModalProp
           }}
           onMount={(editor, monaco: Monaco) => {
             // Making read only the header & footer of the function
-            editor.onKeyDown((e: KeyboardEvent) => {
+            // Use Monaco's IKeyboardEvent and IRange types for compatibility
+            editor.onKeyDown((e: import("monaco-editor").IKeyboardEvent) => {
+              // e is Monaco's IKeyboardEvent, not DOM KeyboardEvent
               if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(e.code)) {
-                const fnHeaderRange = new monaco.Range(0, 0, functionJsDoc.split("\n").length + 2, 0);
+                const fnHeaderRange = new monaco.Range(1, 1, functionJsDoc.split("\n").length + 2, 1);
                 const nbLines = editor.getValue().split("\n").length;
-                const fnFooterRange = new monaco.Range(nbLines, 0, nbLines + 1, 0);
+                const fnFooterRange = new monaco.Range(nbLines, 1, nbLines + 1, 1);
                 const contains = (editor.getSelections() ?? []).findIndex(
-                  (range: Monaco["Range"]) =>
-                    fnHeaderRange.intersectRanges(range) || fnFooterRange.intersectRanges(range),
+                  (range: import("monaco-editor").IRange) =>
+                    monaco.Range.intersectRanges(fnHeaderRange, range) || monaco.Range.intersectRanges(fnFooterRange, range),
                 );
                 if (contains !== -1) {
                   e.stopPropagation();
