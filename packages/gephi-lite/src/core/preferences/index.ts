@@ -22,6 +22,13 @@ const changeTheme: Producer<Preferences, [Preferences["theme"]]> = (theme) => {
   });
 };
 
+const setAutoFillNewAttributes: Producer<Preferences, [Preferences["autoFillNewAttributes"]]> = (autoFillSettings) => {
+  return (preferences) => ({
+    ...preferences,
+    autoFillNewAttributes: autoFillSettings,
+  });
+};
+
 /**
  * Public API:
  * ***********
@@ -31,6 +38,7 @@ export const preferencesAtom = atom<Preferences>(getCurrentPreferences());
 export const preferencesActions = {
   changeLocale: producerToAction(changeLocale, preferencesAtom),
   changeTheme: producerToAction(changeTheme, preferencesAtom),
+  setAutoFillNewAttributes: producerToAction(setAutoFillNewAttributes, preferencesAtom),
 };
 
 /**

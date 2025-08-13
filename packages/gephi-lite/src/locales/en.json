@@ -258,7 +258,7 @@
         "attributes": "Other attributes",
         "attribute-name": "Attribute name",
         "attribute-value": "Attribute value",
-        "new-attribute": "Add new attribute"
+        "new-attribute": "Add new node attribute"
       },
       "edges-data": {
         "id": "Edge ID",
@@ -270,7 +270,7 @@
         "attributes": "Other attributes",
         "attribute-name": "Attribute name",
         "attribute-value": "Attribute value",
-        "new-attribute": "Add new attribute"
+        "new-attribute": "Add new edge attribute"
       }
     },
     "open": {
@@ -678,6 +678,8 @@
     "min": "Min",
     "max": "Max",
     "none": "None",
+    "off": "Off",
+    "on": "On",
     "open": "Open",
     "open_file": "Open {{filename}}",
     "open_code_editor": "Open code editor",
@@ -731,6 +733,15 @@
   },
   "settings": {
     "title": "User's settings",
+    "theme": "Theme",
+    "autoFillNewAttributes": {
+      "title": "Auto-fill new attributes",
+      "nodeAttributes": "Node Attributes",
+      "edgeAttributes": "Edge Attributes",
+      "attributeNamePlaceholder": "Enter attribute name",
+      "addNodeAttributeName": "Add node attribute name",
+      "addEdgeAttributeName": "Add edge attribute name"
+    },
     "danger-zone": {
       "title": "Danger zone",
       "reset-state": {

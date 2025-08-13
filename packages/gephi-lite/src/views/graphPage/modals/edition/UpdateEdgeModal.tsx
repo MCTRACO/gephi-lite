@@ -11,7 +11,7 @@ import { StateManagerProps } from "react-select/dist/declarations/src/useStateMa
 
 import { Select } from "../../../../components/forms/Select";
 import { Modal } from "../../../../components/modals";
-import { useGraphDataset, useGraphDatasetActions, useSelectionActions } from "../../../../core/context/dataContexts";
+import { useGraphDataset, useGraphDatasetActions, useSelectionActions, usePreferences } from "../../../../core/context/dataContexts";
 import { UIContext } from "../../../../core/context/uiContext";
 import { EdgeRenderingData, FieldModel } from "../../../../core/graph/types";
 import { ModalProps } from "../../../../core/modals/types";
@@ -38,6 +38,7 @@ const UpdateEdgeModal: FC<ModalProps<{ edgeId?: string }>> = ({ cancel, submit, 
   const { createEdge, updateEdge } = useGraphDatasetActions();
   const { edgeData, edgeRenderingData, nodeRenderingData, fullGraph, edgeFields } = useGraphDataset();
   const { select } = useSelectionActions();
+  const preferences = usePreferences();
 
   const nodeSelectProps: Partial<StateManagerProps> = useMemo(
     () => ({
@@ -52,14 +53,25 @@ const UpdateEdgeModal: FC<ModalProps<{ edgeId?: string }>> = ({ cancel, submit, 
 
   const isNew = typeof edgeId === "undefined";
   const defaultValues = useMemo(() => {
+    const baseAttributes = edgeFields.map((nf) => ({
+      key: nf.id,
+      value: isNew ? undefined : edgeData[edgeId][nf.id],
+      ...pick(nf, ["qualitative", "quantitative"]),
+    }));
+    
+    // Add auto-filled attributes if enabled and creating a new edge
+    const autoFilledAttributes = [];
+    if (isNew && preferences.autoFillNewAttributes.enabled && preferences.autoFillNewAttributes.edgeAttributeNames.length > 0) {
+      autoFilledAttributes.push(...preferences.autoFillNewAttributes.edgeAttributeNames.map(name => ({
+        key: name,
+        value: "",
+      })));
+    }
+    
     if (isNew)
       return {
         weight: 1,
-        attributes: edgeFields.map((nf) => ({
-          key: nf.id,
-          value: undefined,
-          ...pick(nf, ["qualitative", "quantitative"]),
-        })),
+        attributes: [...baseAttributes, ...autoFilledAttributes],
       };
 
     const source = fullGraph.source(edgeId);
@@ -69,13 +81,9 @@ const UpdateEdgeModal: FC<ModalProps<{ edgeId?: string }>> = ({ cancel, submit, 
       ...omit(edgeRenderingData[edgeId], "rawWeight"),
       source: { value: source, label: nodeRenderingData[source].label || source },
       target: { value: target, label: nodeRenderingData[target].label || target },
-      attributes: edgeFields.map((nf) => ({
-        key: nf.id,
-        value: edgeData[edgeId][nf.id],
-        ...pick(nf, ["qualitative", "quantitative"]),
-      })),
+      attributes: baseAttributes,
     };
-  }, [edgeData, edgeId, edgeRenderingData, fullGraph, isNew, nodeRenderingData, edgeFields]);
+  }, [edgeData, edgeId, edgeRenderingData, fullGraph, isNew, nodeRenderingData, edgeFields, preferences.autoFillNewAttributes]);
   const {
     register,
     handleSubmit,
@@ -328,7 +336,10 @@ const UpdateEdgeModal: FC<ModalProps<{ edgeId?: string }>> = ({ cancel, submit, 
           <button
             type="button"
             className="btn btn-outline-dark"
-            onClick={() => setValue("attributes", getValues("attributes").concat({ key: "", value: "" }))}
+            onClick={() => {
+              const newAttribute = { key: "", value: "" };
+              setValue("attributes", getValues("attributes").concat(newAttribute));
+            }}
           >
             <AiOutlinePlusCircle className="me-2" /> {t("graph.model.edges-data.new-attribute")}
           </button>

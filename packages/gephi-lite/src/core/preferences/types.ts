@@ -12,4 +12,10 @@ export interface Preferences {
   locale: string;
   // theme
   theme: "light" | "dark" | "auto";
+  // auto-fill settings for new attributes
+  autoFillNewAttributes: {
+    enabled: boolean;
+    nodeAttributeNames: string[];
+    edgeAttributeNames: string[];
+  };
 }

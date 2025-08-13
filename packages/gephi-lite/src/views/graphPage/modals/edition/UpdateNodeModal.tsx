@@ -9,7 +9,7 @@ import { BsFillTrashFill } from "react-icons/bs";
 import { FaTimes } from "react-icons/fa";
 
 import { Modal } from "../../../../components/modals";
-import { useGraphDataset, useGraphDatasetActions, useSelectionActions } from "../../../../core/context/dataContexts";
+import { useGraphDataset, useGraphDatasetActions, useSelectionActions, usePreferences } from "../../../../core/context/dataContexts";
 import { FieldModel, NodeRenderingData } from "../../../../core/graph/types";
 import { ModalProps } from "../../../../core/modals/types";
 import { useNotifications } from "../../../../core/notifications";
@@ -26,30 +26,38 @@ const UpdateNodeModal: FC<ModalProps<{ nodeId?: string }>> = ({ cancel, submit, 
   const { createNode, updateNode } = useGraphDatasetActions();
   const { nodeData, nodeRenderingData, nodeFields } = useGraphDataset();
   const { select } = useSelectionActions();
+  const preferences = usePreferences();
 
   const isNew = typeof nodeId === "undefined";
   const defaultValues = useMemo(() => {
+    const baseAttributes = nodeFields.map((nf) => ({
+      key: nf.id,
+      value: isNew ? undefined : nodeData[nodeId][nf.id],
+      ...pick(nf, ["qualitative", "quantitative"]),
+    }));
+    
+    // Add auto-filled attributes if enabled and creating a new node
+    const autoFilledAttributes = [];
+    if (isNew && preferences.autoFillNewAttributes.enabled && preferences.autoFillNewAttributes.nodeAttributeNames.length > 0) {
+      autoFilledAttributes.push(...preferences.autoFillNewAttributes.nodeAttributeNames.map(name => ({
+        key: name,
+        value: "",
+      })));
+    }
+    
     if (isNew)
       return {
         x: 0,
         y: 0,
-        attributes: nodeFields.map((nf) => ({
-          key: nf.id,
-          value: undefined,
-          ...pick(nf, ["qualitative", "quantitative"]),
-        })),
+        attributes: [...baseAttributes, ...autoFilledAttributes],
       };
 
     return {
       id: nodeId,
       ...omit(nodeRenderingData[nodeId], "rawSize"),
-      attributes: nodeFields.map((nf) => ({
-        key: nf.id,
-        value: nodeData[nodeId][nf.id],
-        ...pick(nf, ["qualitative", "quantitative"]),
-      })),
+      attributes: baseAttributes,
     };
-  }, [isNew, nodeId, nodeRenderingData, nodeData, nodeFields]);
+  }, [isNew, nodeId, nodeRenderingData, nodeData, nodeFields, preferences.autoFillNewAttributes]);
   const {
     register,
     handleSubmit,
@@ -258,7 +266,9 @@ const UpdateNodeModal: FC<ModalProps<{ nodeId?: string }>> = ({ cancel, submit, 
           <button
             type="button"
             className="btn btn-outline-dark"
-            onClick={() => setValue("attributes", getValues("attributes").concat({ key: "", value: "" }))}
+            onClick={() => {
+              setValue("attributes", getValues("attributes").concat({ key: "", value: "" }));
+            }}
           >
             <AiOutlinePlusCircle className="me-2" /> {t("graph.model.nodes-data.new-attribute")}
           </button>
