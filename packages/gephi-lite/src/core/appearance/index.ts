@@ -1,4 +1,4 @@
-import { getEmptyAppearanceState, serializeAppearanceState } from "@gephi/gephi-lite-sdk";
+import { getEmptyAppearanceState } from "@gephi/gephi-lite-sdk";
 import { Producer, atom, producerToAction } from "@ouestware/atoms";
 
 import { globalStorage } from "../storage/globalStorage";
@@ -108,9 +108,6 @@ export const appearanceActions = {
  * *********
  */
 appearanceAtom.bind((appearanceState) => {
-  // Save to global storage (async)
+  // Save to global storage only
   globalStorage.setItem("appearance", appearanceState).catch(console.error);
-  
-  // Keep sessionStorage as backup for sync access
-  sessionStorage.setItem("appearance", serializeAppearanceState(appearanceState));
 });

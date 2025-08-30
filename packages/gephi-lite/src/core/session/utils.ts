@@ -22,10 +22,9 @@ export async function getCurrentSession(): Promise<Session> {
 
 export function getCurrentSessionSync(): Session {
   try {
-    // Fallback to sessionStorage for synchronous access
-    const rawSession = sessionStorage.getItem("session");
-    const session = rawSession ? parseSession(rawSession) : null;
-    return { ...getEmptySession(), ...session };
+    // Return empty session since sync access to global storage is not available
+    // The async getCurrentSession function should be used instead
+    return getEmptySession();
   } catch (e) {
     console.error(e);
     return getEmptySession();

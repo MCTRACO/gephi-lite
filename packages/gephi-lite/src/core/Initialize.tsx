@@ -12,6 +12,7 @@ import { useBroadcast } from "./broadcast/useBroadcast";
 import { useFileActions, useGraphDatasetActions } from "./context/dataContexts";
 import { filtersAtom } from "./filters";
 import { parseFiltersState } from "./filters/utils";
+import { FiltersState } from "./filters/types";
 import { graphDatasetAtom } from "./graph";
 import { parseDataset } from "./graph/utils";
 import { useModal } from "./modals";
@@ -111,6 +112,14 @@ export const Initialize: FC<PropsWithChildren<unknown>> = ({ children }) => {
       }
     }
 
+    // Load layout state from global storage (with fallback to local)
+    try {
+      const { initializeLayoutState } = await import("./layouts");
+      await initializeLayoutState();
+    } catch (e) {
+      console.error("Failed to load layout state from global storage:", e);
+    }
+
     // Load a graph
     // ~~~~~~~~~~~~
     let graphFound = false;
@@ -159,19 +168,53 @@ export const Initialize: FC<PropsWithChildren<unknown>> = ({ children }) => {
     }
 
     if (!graphFound) {
-      // Load data from session storage first, then global storage
-      let rawDataset = sessionStorage.getItem("dataset");
-      const rawFilters = sessionStorage.getItem("filters");
-      const rawAppearance = sessionStorage.getItem("appearance");
+      // Load data from global storage only
+      let rawDataset: string | null = null;
+      let rawFilters: string | null = null;
+      let rawAppearance: string | null = null;
 
-      // If not found in sessionStorage, try global storage
-      if (!rawDataset) {
-        try {
-          const { globalStorage } = await import("./storage/globalStorage");
-          rawDataset = await globalStorage.getItem("dataset");
-        } catch (e) {
-          console.warn("Failed to load dataset from global storage:", e);
+      // Load from global storage
+      try {
+        const { globalStorage } = await import("./storage/globalStorage");
+        
+        // Load dataset
+        const globalDataset = await globalStorage.getItem("dataset");
+        if (globalDataset) {
+          try {
+            // Deserialize the dataset from global storage
+            const { deserializeDataset, datasetToString } = await import("@gephi/gephi-lite-sdk");
+            const dataset = deserializeDataset(globalDataset);
+            // Only convert to string if we have a complete dataset with all required properties
+            if (dataset?.fullGraph && 
+                dataset.nodeRenderingData && 
+                dataset.edgeRenderingData && 
+                dataset.nodeData && 
+                dataset.edgeData && 
+                dataset.metadata && 
+                dataset.nodeFields && 
+                dataset.edgeFields) {
+              rawDataset = datasetToString(dataset as unknown as import("@gephi/gephi-lite-sdk").GraphDataset);
+            }
+          } catch (e) {
+            console.warn("Failed to deserialize global dataset:", e);
+          }
         }
+        
+        // Load filters
+        const globalFilters = await globalStorage.getItem("filters");
+        if (globalFilters) {
+          // Global filters are already an object, we need to serialize them to match expected format
+          const { serializeFiltersState } = await import("./filters/utils");
+          rawFilters = serializeFiltersState(globalFilters as FiltersState);
+        }
+        
+        // Load appearance
+        const globalAppearanceData = await globalStorage.getItem("appearance");
+        if (globalAppearanceData) {
+          rawAppearance = JSON.stringify(globalAppearanceData);
+        }
+      } catch (e) {
+        console.warn("Failed to load data from global storage:", e);
       }
 
       if (rawDataset) {
@@ -184,7 +227,15 @@ export const Initialize: FC<PropsWithChildren<unknown>> = ({ children }) => {
           graphDatasetAtom.set(dataset);
           filtersAtom.set((prev) => filters || prev);
           appearanceAtom.set((prev) => appearance || prev);
-          resetCamera({ forceRefresh: true });
+          
+          // Only reset camera if the graph is empty or very small
+          // This prevents overriding stored camera positions for existing graphs
+          if (dataset.fullGraph.order === 0) {
+            resetCamera({ forceRefresh: true });
+          } else {
+            // For loaded graphs, just refresh to show the graph with current camera state
+            resetCamera({ forceRefresh: true, source: "dataset" });
+          }
 
           if (dataset.fullGraph.order > 0) showWelcomeModal = false;
         }

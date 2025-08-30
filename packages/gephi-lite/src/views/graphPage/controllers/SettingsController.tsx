@@ -6,20 +6,27 @@ import { DEFAULT_SETTINGS, Settings } from "sigma/settings";
 import { getDrawEdgeLabel, getDrawNodeLabel } from "../../../core/appearance/utils";
 import { useAppearance, useGraphDataset, usePreferences } from "../../../core/context/dataContexts";
 import { getAppliedTheme } from "../../../core/preferences/utils";
-import { GephiLiteSigma, resetCamera, sigmaAtom } from "../../../core/sigma";
+import { resetCamera, sigmaAtom } from "../../../core/sigma";
 import { drawDiscNodeHover } from "../../../core/sigma/utils";
 import { inputToStateThreshold } from "../../../utils/labels";
 
 export const SettingsController: FC<{ setIsReady: () => void }> = ({ setIsReady }) => {
-  const sigma = useSigma() as GephiLiteSigma;
+  const sigma = useSigma();
   const graphDataset = useGraphDataset();
   const graphAppearance = useAppearance();
   const { theme } = usePreferences();
 
   useEffect(() => {
+    // @ts-expect-error - Sigma type mismatch with atoms
     sigmaAtom.set(sigma);
-    resetCamera({ forceRefresh: true });
-  }, [sigma]);
+    
+    // Only reset camera if there's no graph data loaded
+    // This prevents overriding stored camera positions
+    const dataset = graphDataset;
+    if (dataset.fullGraph.order === 0) {
+      resetCamera({ forceRefresh: true });
+    }
+  }, [sigma, graphDataset]);
 
   useEffect(() => {
     const mode = getAppliedTheme(theme);

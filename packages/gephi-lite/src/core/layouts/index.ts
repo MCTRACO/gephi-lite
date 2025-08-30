@@ -26,11 +26,33 @@ function getLocalStorageLayoutState(): LayoutState {
   };
 }
 
+async function getGlobalLayoutState(): Promise<LayoutState> {
+  try {
+    const globalState = await globalStorage.getItem<LayoutState>("layout");
+    if (globalState) {
+      return { ...getEmptyLayoutState(), ...globalState };
+    }
+  } catch (e) {
+    console.warn("Failed to load layout from global storage:", e);
+  }
+  
+  // Fallback to localStorage
+  return getLocalStorageLayoutState();
+}
+
 /**
  * Public API:
  * ***********
  */
 export const layoutStateAtom = atom<LayoutState>(getLocalStorageLayoutState());
+
+/**
+ * Initialize layout state from global storage
+ */
+export async function initializeLayoutState(): Promise<void> {
+  const globalState = await getGlobalLayoutState();
+  layoutStateAtom.set(globalState);
+}
 
 /**
  * Actions:

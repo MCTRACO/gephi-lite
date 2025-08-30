@@ -30,7 +30,6 @@ import {
   cleanEdge,
   cleanNode,
   dataGraphToSigmaGraph,
-  datasetToString,
   getEmptyGraphDataset,
   newItemModel,
   uniqFieldvaluesAsStrings,
@@ -371,19 +370,18 @@ graphDatasetAtom.bind((graphDataset, previousGraphDataset) => {
     document.title = ["Gephi Lite", graphDataset.metadata.title].filter((s) => !isNil(s)).join(" - ");
   }
 
-  // Only "small enough" graphs are stored in the sessionStorage, because this
-  // feature only helps to resist page reloads, basically:
+  // Save graphs to global storage for cross-browser persistence
   if (graphDataset.fullGraph.order < 5000 && graphDataset.fullGraph.size < 25000) {
     try {
-      const datasetString = datasetToString(graphDataset);
-      sessionStorage.setItem("dataset", datasetString);
-      
-      // Also save to global storage for cross-browser persistence
+      // Save to global storage for cross-browser persistence
+      // Use serializeDataset for proper graph serialization
       import("../storage/globalStorage").then(({ globalStorage }) => {
-        globalStorage.setItem("dataset", datasetString);
+        import("@gephi/gephi-lite-sdk").then(({ serializeDataset }) => {
+          globalStorage.setItem("dataset", serializeDataset(graphDataset));
+        });
       });
     } catch (e) {
-      console.warn("Failed to save dataset to storage:", e);
+      console.warn("Failed to save dataset to global storage:", e);
     }
   }
 });

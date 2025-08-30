@@ -2,7 +2,7 @@ import { Producer, atom, producerToAction } from "@ouestware/atoms";
 
 import { globalStorage } from "../storage/globalStorage";
 import { Session } from "./types";
-import { getCurrentSessionSync, getEmptySession, serializeSession } from "./utils";
+import { getCurrentSessionSync, getEmptySession } from "./utils";
 
 /**
  * Producers:
@@ -28,9 +28,6 @@ export const sessionActions = {
  * *********
  */
 sessionAtom.bind((session) => {
-  // Save to global storage (async)
+  // Save to global storage only
   globalStorage.setItem("session", session).catch(console.error);
-  
-  // Keep sessionStorage as backup for sync access
-  sessionStorage.setItem("session", serializeSession(session));
 });

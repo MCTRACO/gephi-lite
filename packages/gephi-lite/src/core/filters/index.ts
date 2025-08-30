@@ -2,7 +2,7 @@ import { Producer, atom, producerToAction } from "@ouestware/atoms";
 import { dropRight, inRange } from "lodash";
 
 import { FilterType, FiltersState } from "./types";
-import { getEmptyFiltersState, serializeFiltersState } from "./utils";
+import { getEmptyFiltersState } from "./utils";
 
 /**
  * Producers:
@@ -136,5 +136,8 @@ export const filtersActions = {
  * *********
  */
 filtersAtom.bind((filtersState) => {
-  sessionStorage.setItem("filters", serializeFiltersState(filtersState));
+  // Save to global storage for cross-browser persistence
+  import("../storage/globalStorage").then(({ globalStorage }) => {
+    globalStorage.setItem("filters", filtersState);
+  });
 });
