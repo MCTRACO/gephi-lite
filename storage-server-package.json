@@ -1,0 +1,17 @@
+{
+  "name": "gephi-lite-storage-server",
+  "version": "1.0.0",
+  "description": "Storage server for Gephi Lite global settings",
+  "main": "storage-server.js",
+  "scripts": {
+    "start": "node storage-server.js",
+    "dev": "nodemon storage-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

@@ -375,9 +375,15 @@ graphDatasetAtom.bind((graphDataset, previousGraphDataset) => {
   // feature only helps to resist page reloads, basically:
   if (graphDataset.fullGraph.order < 5000 && graphDataset.fullGraph.size < 25000) {
     try {
-      sessionStorage.setItem("dataset", datasetToString(graphDataset));
-    } catch (_e) {
-      // nothing todo
+      const datasetString = datasetToString(graphDataset);
+      sessionStorage.setItem("dataset", datasetString);
+      
+      // Also save to global storage for cross-browser persistence
+      import("../storage/globalStorage").then(({ globalStorage }) => {
+        globalStorage.setItem("dataset", datasetString);
+      });
+    } catch (e) {
+      console.warn("Failed to save dataset to storage:", e);
     }
   }
 });

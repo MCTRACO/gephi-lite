@@ -9,6 +9,7 @@ import { resetStates } from "../../core/context/dataContexts";
 import { useModal } from "../../core/modals";
 import { useNotifications } from "../../core/notifications";
 import { useConnectedUser } from "../../core/user";
+import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import ConfirmModal from "./modals/ConfirmModal";
 
 export const UserSettingsPanel: FC = () => {
@@ -37,6 +38,11 @@ export const UserSettingsPanel: FC = () => {
           <span className="flex-grow-1">{t("settings.theme")}</span>
           <ThemeSwicther />
         </div>
+        <hr className="m-0" />
+        
+        {/* Global Settings Section */}
+        <GlobalSettingsPanel />
+        
         <hr className="m-0" />
         <h3 className="fs-5 mt-3">
           <GitHubIcon /> {t("github.title")}

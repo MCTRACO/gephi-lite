@@ -7,12 +7,15 @@ import seedrandom from "seedrandom";
 import { graphDatasetActions, graphDatasetAtom, sigmaGraphAtom } from "../graph";
 import { dataGraphToFullGraph } from "../graph/utils";
 import { resetCamera } from "../sigma";
+import { globalStorage } from "../storage/globalStorage";
 import { LAYOUTS } from "./collection";
 import { LayoutMapping, LayoutQuality, LayoutState } from "./types";
 
 function getEmptyLayoutState(): LayoutState {
   return { quality: { enabled: false, showGrid: true }, type: "idle" };
 }
+
+//
 
 function getLocalStorageLayoutState(): LayoutState {
   const raw = localStorage.getItem("layout");
@@ -98,7 +101,7 @@ const _computeLayoutQualityMetric: Producer<LayoutState, []> = () => {
       rng: seedrandom("gephi-lite"),
     });
     return (state) => ({ ...state, quality: { ...state.quality, metric } });
-  } catch (_e: unknown) {
+  } catch {
     return identity;
   }
 };
@@ -138,4 +141,15 @@ gridEnabledAtom.bindEffect((connectedClosenessSettings) => {
     (sigmaGraph as EventEmitter).off("nodesDragged", fn);
     sigmaGraph.off("eachNodeAttributesUpdated", fn);
   };
+});
+
+/**
+ * Layout state storage binding
+ */
+layoutStateAtom.bind((layoutState) => {
+  // Save to global storage (async)
+  globalStorage.setItem("layout", layoutState).catch(console.error);
+  
+  // Keep localStorage as backup for sync access
+  localStorage.setItem("layout", JSON.stringify(layoutState));
 });

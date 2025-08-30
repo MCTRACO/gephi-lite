@@ -1,6 +1,7 @@
 import { gephiLiteParse, gephiLiteStringify } from "@gephi/gephi-lite-sdk";
 
 import { i18n } from "../../locales/provider";
+import { globalStorage } from "../storage/globalStorage";
 import { Preferences } from "./types";
 
 export function getEmptyPreferences(): Preferences {
@@ -13,8 +14,19 @@ export function getEmptyPreferences(): Preferences {
   };
 }
 
-export function getCurrentPreferences(): Preferences {
+export async function getCurrentPreferences(): Promise<Preferences> {
   try {
+    const preferences = await globalStorage.getItem<Preferences>("preferences");
+    return { ...getEmptyPreferences(), ...preferences };
+  } catch (e) {
+    console.error(e);
+    return getEmptyPreferences();
+  }
+}
+
+export function getCurrentPreferencesSync(): Preferences {
+  try {
+    // Fallback to localStorage for synchronous access
     const rawPreferences = localStorage.getItem("preferences");
     const preferences = rawPreferences ? parsePreferences(rawPreferences) : null;
     return { ...getEmptyPreferences(), ...preferences };

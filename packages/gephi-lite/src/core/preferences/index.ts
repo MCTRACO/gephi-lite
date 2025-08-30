@@ -1,7 +1,8 @@
 import { Producer, atom, producerToAction } from "@ouestware/atoms";
 
+import { globalStorage } from "../storage/globalStorage";
 import { Preferences } from "./types";
-import { getAppliedTheme, getCurrentPreferences, serializePreferences } from "./utils";
+import { getAppliedTheme, getCurrentPreferencesSync, serializePreferences } from "./utils";
 
 /**
  * Producers:
@@ -26,7 +27,7 @@ const changeTheme: Producer<Preferences, [Preferences["theme"]]> = (theme) => {
  * Public API:
  * ***********
  */
-export const preferencesAtom = atom<Preferences>(getCurrentPreferences());
+export const preferencesAtom = atom<Preferences>(getCurrentPreferencesSync());
 
 export const preferencesActions = {
   changeLocale: producerToAction(changeLocale, preferencesAtom),
@@ -38,6 +39,10 @@ export const preferencesActions = {
  * *********
  */
 preferencesAtom.bind((preferences, prevPreferences) => {
+  // Save to global storage (async)
+  globalStorage.setItem("preferences", preferences).catch(console.error);
+  
+  // Keep localStorage as backup for sync access
   localStorage.setItem("preferences", serializePreferences(preferences));
 
   // Apply theme change

@@ -834,6 +834,22 @@
   },
   "settings": {
     "title": "User's settings",
+    "global-storage": {
+      "title": "Global Settings Storage",
+      "description": "Settings are now saved globally across all browsers and sessions via a storage server.",
+      "status": "Storage Status",
+      "online": "Online",
+      "offline": "Offline (using local backup)",
+      "server-url": "Server URL",
+      "pending-retries": "Pending retries",
+      "offline-message": "The storage server is not available. Settings will be saved locally as backup and synced when the server becomes available again.",
+      "danger-zone": "Danger Zone",
+      "reset-description": "This will permanently delete ALL global settings from the server and reload the application.",
+      "reset-all": "Reset All Global Settings",
+      "resetting": "Resetting...",
+      "reset-confirm": "Are you sure you want to reset ALL global settings? This action cannot be undone and will affect all browsers and sessions.",
+      "reset-error": "Failed to reset global settings. Please try again."
+    },
     "danger-zone": {
       "title": "Danger zone",
       "reset-state": {

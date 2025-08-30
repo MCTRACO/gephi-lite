@@ -1,7 +1,9 @@
 import { getEmptyAppearanceState, serializeAppearanceState } from "@gephi/gephi-lite-sdk";
 import { Producer, atom, producerToAction } from "@ouestware/atoms";
 
+import { globalStorage } from "../storage/globalStorage";
 import { ItemType } from "../types";
+import { getCurrentAppearanceSync } from "./storageUtils";
 import {
   AppearanceState,
   BooleanAppearance,
@@ -81,7 +83,7 @@ const setEdgesLabelEllipsisAppearance: Producer<AppearanceState, [LabelEllipsis]
  * Public API:
  * ***********
  */
-export const appearanceAtom = atom<AppearanceState>(getEmptyAppearanceState());
+export const appearanceAtom = atom<AppearanceState>(getCurrentAppearanceSync());
 
 export const appearanceActions = {
   resetState: producerToAction(resetState, appearanceAtom),
@@ -106,5 +108,9 @@ export const appearanceActions = {
  * *********
  */
 appearanceAtom.bind((appearanceState) => {
+  // Save to global storage (async)
+  globalStorage.setItem("appearance", appearanceState).catch(console.error);
+  
+  // Keep sessionStorage as backup for sync access
   sessionStorage.setItem("appearance", serializeAppearanceState(appearanceState));
 });

@@ -1,0 +1,53 @@
+{
+  "showEdges": {
+    "value": true
+  },
+  "nodesSize": {
+    "type": "data"
+  },
+  "edgesSize": {
+    "type": "data"
+  },
+  "backgroundColor": "#FFFFFF00",
+  "layoutGridColor": "#666666",
+  "nodesColor": {
+    "type": "data"
+  },
+  "edgesColor": {
+    "type": "data"
+  },
+  "nodesLabel": {
+    "type": "data"
+  },
+  "edgesLabel": {
+    "type": "data"
+  },
+  "nodesLabelSize": {
+    "type": "fixed",
+    "value": 14,
+    "zoomCorrelation": 0,
+    "density": 1
+  },
+  "edgesLabelSize": {
+    "type": "fixed",
+    "value": 14,
+    "zoomCorrelation": 0,
+    "density": 1
+  },
+  "nodesLabelEllipsis": {
+    "type": "ellipsis",
+    "enabled": false,
+    "maxLength": 25
+  },
+  "edgesLabelEllipsis": {
+    "type": "ellipsis",
+    "enabled": false,
+    "maxLength": 25
+  },
+  "nodesImage": {
+    "type": "none"
+  },
+  "edgesZIndex": {
+    "type": "none"
+  }
+}

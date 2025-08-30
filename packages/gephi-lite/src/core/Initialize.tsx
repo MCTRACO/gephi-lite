@@ -7,6 +7,7 @@ import { I18n } from "../locales/provider";
 import { extractFilename } from "../utils/url";
 import { WelcomeModal } from "../views/graphPage/modals/WelcomeModal";
 import { appearanceAtom } from "./appearance";
+import { getCurrentAppearance } from "./appearance/storageUtils";
 import { useBroadcast } from "./broadcast/useBroadcast";
 import { useFileActions, useGraphDatasetActions } from "./context/dataContexts";
 import { filtersAtom } from "./filters";
@@ -18,7 +19,7 @@ import { useNotifications } from "./notifications";
 import { preferencesAtom } from "./preferences";
 import { getCurrentPreferences } from "./preferences/utils";
 import { sessionAtom } from "./session";
-import { getEmptySession, parseSession } from "./session/utils";
+import { getCurrentSession, getEmptySession, parseSession } from "./session/utils";
 import { resetCamera } from "./sigma";
 import { AuthInit } from "./user/AuthInit";
 
@@ -70,15 +71,45 @@ export const Initialize: FC<PropsWithChildren<unknown>> = ({ children }) => {
     if (isInitialized) return;
     isInitialized = true;
 
-    // Load session from local storage
-    sessionAtom.set(() => {
-      const raw = sessionStorage.getItem("session");
-      const parsed = raw ? parseSession(raw) : null;
-      return parsed ?? getEmptySession();
-    });
+    // Load session from global storage (with fallback to local)
+    try {
+      const session = await getCurrentSession();
+      sessionAtom.set(session);
+    } catch (e) {
+      console.error("Failed to load session from global storage:", e);
+      // Fallback to local session storage
+      sessionAtom.set(() => {
+        const raw = sessionStorage.getItem("session");
+        const parsed = raw ? parseSession(raw) : null;
+        return parsed ?? getEmptySession();
+      });
+    }
 
-    // Load preferences from local storage
-    preferencesAtom.set(getCurrentPreferences());
+    // Load preferences from global storage (with fallback to local)
+    try {
+      const preferences = await getCurrentPreferences();
+      preferencesAtom.set(preferences);
+    } catch (e) {
+      console.error("Failed to load preferences from global storage:", e);
+      // Fallback to local preferences  
+      const raw = localStorage.getItem("preferences");
+      const parsed = raw ? JSON.parse(raw) : null;
+      preferencesAtom.set({ ...getEmptySession(), ...parsed });
+    }
+
+    // Load appearance from global storage (with fallback to local)
+    try {
+      const appearance = await getCurrentAppearance();
+      appearanceAtom.set(appearance);
+    } catch (e) {
+      console.error("Failed to load appearance from global storage:", e);
+      // Fallback to local appearance
+      const raw = sessionStorage.getItem("appearance");
+      const parsed = raw ? parseAppearanceState(raw) : null;
+      if (parsed) {
+        appearanceAtom.set(parsed);
+      }
+    }
 
     // Load a graph
     // ~~~~~~~~~~~~
@@ -128,10 +159,20 @@ export const Initialize: FC<PropsWithChildren<unknown>> = ({ children }) => {
     }
 
     if (!graphFound) {
-      // Load data from session storage
-      const rawDataset = sessionStorage.getItem("dataset");
+      // Load data from session storage first, then global storage
+      let rawDataset = sessionStorage.getItem("dataset");
       const rawFilters = sessionStorage.getItem("filters");
       const rawAppearance = sessionStorage.getItem("appearance");
+
+      // If not found in sessionStorage, try global storage
+      if (!rawDataset) {
+        try {
+          const { globalStorage } = await import("./storage/globalStorage");
+          rawDataset = await globalStorage.getItem("dataset");
+        } catch (e) {
+          console.warn("Failed to load dataset from global storage:", e);
+        }
+      }
 
       if (rawDataset) {
         const dataset = parseDataset(rawDataset);

@@ -1,6 +1,7 @@
 {
   "name": "@gephi/gephi-lite",
   "version": "0.6.3",
+  "main": "dist/gephi-gephi-lite.cjs.js",
   "private": true,
   "license": "gpl-3.0",
   "scripts": {
@@ -40,6 +41,7 @@
     "@ouestware/atoms": "^0.0.1-alpha.3",
     "@react-sigma/core": "^5.0.2",
     "@sigma/node-image": "^3.0.0",
+    "@swc/core": "^1.13.5",
     "bootstrap": "^5.3.3",
     "byte-size": "^9.0.1",
     "chroma-js": "^3.1.2",

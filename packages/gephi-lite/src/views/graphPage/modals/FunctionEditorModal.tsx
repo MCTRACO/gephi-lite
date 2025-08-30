@@ -67,13 +67,13 @@ export function FunctionEditorModal<T>(props: ModalProps<FunctionEditorModalProp
           }}
           onMount={(editor, monaco: Monaco) => {
             // Making read only the header & footer of the function
-            editor.onKeyDown((e) => {
+            editor.onKeyDown((e: Parameters<Parameters<typeof editor.onKeyDown>[0]>[0]) => {
               if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(e.code)) {
                 const fnHeaderRange = new monaco.Range(0, 0, functionJsDoc.split("\n").length + 2, 0);
                 const nbLines = editor.getValue().split("\n").length;
                 const fnFooterRange = new monaco.Range(nbLines, 0, nbLines + 1, 0);
                 const contains = (editor.getSelections() ?? []).findIndex(
-                  (selection) =>
+                  (selection: ReturnType<typeof editor.getSelections>[0]) =>
                     fnHeaderRange.intersectRanges(selection) || fnFooterRange.intersectRanges(selection),
                 );
                 if (contains !== -1) {
