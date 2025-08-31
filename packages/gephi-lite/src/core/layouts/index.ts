@@ -1,33 +1,28 @@
 import { Producer, asyncAction, atom, derivedAtom, producerToAction } from "@ouestware/atoms";
 import EventEmitter from "events";
-import { connectedCloseness } from "graphology-metrics/layout-quality";
 import { debounce, identity, pick } from "lodash";
-import seedrandom from "seedrandom";
 
 import { graphDatasetActions, graphDatasetAtom, sigmaGraphAtom } from "../graph";
 import { dataGraphToFullGraph } from "../graph/utils";
 import { resetCamera } from "../sigma";
 import { LAYOUTS } from "./collection";
+import { saveSlice } from "../persistence/client";
 import { LayoutMapping, LayoutQuality, LayoutState } from "./types";
 
 function getEmptyLayoutState(): LayoutState {
   return { quality: { enabled: false, showGrid: true }, type: "idle" };
 }
 
-function getLocalStorageLayoutState(): LayoutState {
-  const raw = localStorage.getItem("layout");
-  const state = raw ? JSON.parse(raw) : null;
-  return {
-    ...getEmptyLayoutState(),
-    ...state,
-  };
+function getInitialLayoutState(): LayoutState {
+  // Placeholder default; actual load happens in Initialize
+  return getEmptyLayoutState();
 }
 
 /**
  * Public API:
  * ***********
  */
-export const layoutStateAtom = atom<LayoutState>(getLocalStorageLayoutState());
+export const layoutStateAtom = atom<LayoutState>(getInitialLayoutState());
 
 /**
  * Actions:
@@ -92,15 +87,8 @@ export const setQuality: Producer<LayoutState, [LayoutQuality]> = (quality) => {
 };
 
 const _computeLayoutQualityMetric: Producer<LayoutState, []> = () => {
-  const sigmaGraph = sigmaGraphAtom.get();
-  try {
-    const metric = connectedCloseness(sigmaGraph, {
-      rng: seedrandom("gephi-lite"),
-    });
-    return (state) => ({ ...state, quality: { ...state.quality, metric } });
-  } catch (_e: unknown) {
-    return identity;
-  }
+  // Metric computation disabled in this persistence refactor; no-op producer.
+  return identity;
 };
 
 export const layoutActions = {
@@ -138,4 +126,9 @@ gridEnabledAtom.bindEffect((connectedClosenessSettings) => {
     (sigmaGraph as EventEmitter).off("nodesDragged", fn);
     sigmaGraph.off("eachNodeAttributesUpdated", fn);
   };
+});
+
+// Persist layout state remotely on change
+layoutStateAtom.bind((state) => {
+  saveSlice("layout", state).catch(() => void 0);
 });

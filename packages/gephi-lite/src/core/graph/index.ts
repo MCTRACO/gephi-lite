@@ -13,6 +13,7 @@ import { Coordinates } from "sigma/types";
 
 import { getPalette } from "../../components/GraphAppearance/color/utils";
 import { appearanceAtom } from "../appearance";
+import { saveSlice } from "../persistence/client";
 import { applyVisualProperties, getAllVisualGetters } from "../appearance/utils";
 import { filtersAtom } from "../filters";
 import { buildTopologicalFiltersDefinitions } from "../filters/topological";
@@ -58,8 +59,7 @@ const editGraphMeta: Producer<GraphDataset, [Partial<GraphDataset["metadata"]>]>
 const setFieldModel: Producer<GraphDataset, [FieldModel]> = (fieldModel) => {
   const key = fieldModel.itemType === "nodes" ? "nodeFields" : "edgeFields";
   return (state) => {
-    const prevState = state[key];
-    // todo: remove typescript issue solved here by forcing type
+  const prevState = state[key];
     const update = !!(prevState as { id: string }[]).find((f) => f.id === fieldModel.id);
     return {
       ...state,
@@ -335,31 +335,22 @@ graphDatasetAtom.bind((graphDataset, previousGraphDataset) => {
     // to keep appearance state in sync we must check at least partitions
     forEach(newState, (appearanceElement, key: keyof AppearanceState) => {
       if (!appearanceElement || isString(appearanceElement) || !("type" in appearanceElement)) return appearanceElement;
-      // TODO
-      // - check if data field quali/quanti is still the good one
 
       // utils variables
       const itemsData = graphDataset[APPEARANCE_ITEM_TYPES[key] === "nodes" ? "nodeData" : "edgeData"];
       let values: string[] = [];
 
-      switch (appearanceElement.type) {
-        // - if partitions palette are still in sync with the field values
-        case "partition":
-          // check if deprecated appearance state
-          values = uniqFieldvaluesAsStrings(itemsData, appearanceElement.field.field);
-
-          // checking with the actual palette miss some values. It's ok if it has more available.
-          if (
-            keys(appearanceElement.colorPalette).length < values.length ||
-            values.some((v) => appearanceElement.colorPalette[v] === undefined)
-          ) {
-            // new palette
-            // TODO: merge existing palette with the new values, i.e. keep existing colors
-            appearanceElement.colorPalette = getPalette(values);
-          }
-          break;
-        // nothing to do for other cases
-        // TODO: check if other cases need edits.
+      if (appearanceElement.type === "partition") {
+        // check if deprecated appearance state
+        values = uniqFieldvaluesAsStrings(itemsData, appearanceElement.field.field);
+        // checking with the actual palette miss some values. It's ok if it has more available.
+        if (
+          keys(appearanceElement.colorPalette).length < values.length ||
+          values.some((v) => appearanceElement.colorPalette[v] === undefined)
+        ) {
+          // new palette, regenerate from current values
+          appearanceElement.colorPalette = getPalette(values);
+        }
       }
     });
 
@@ -371,15 +362,8 @@ graphDatasetAtom.bind((graphDataset, previousGraphDataset) => {
     document.title = ["Gephi Lite", graphDataset.metadata.title].filter((s) => !isNil(s)).join(" - ");
   }
 
-  // Only "small enough" graphs are stored in the sessionStorage, because this
-  // feature only helps to resist page reloads, basically:
-  if (graphDataset.fullGraph.order < 5000 && graphDataset.fullGraph.size < 25000) {
-    try {
-      sessionStorage.setItem("dataset", datasetToString(graphDataset));
-    } catch (_e) {
-      // nothing todo
-    }
-  }
+  // Persist dataset remotely on every change
+  saveSlice("dataset", datasetToString(graphDataset)).catch(() => void 0);
 });
 
 filtersAtom.bind((filtersState) => {

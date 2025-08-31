@@ -1,6 +1,7 @@
 import { Producer, atom, producerToAction } from "@ouestware/atoms";
 
 import { Session } from "./types";
+import { saveSlice } from "../persistence/client";
 import { getEmptySession, serializeSession } from "./utils";
 
 /**
@@ -27,5 +28,5 @@ export const sessionActions = {
  * *********
  */
 sessionAtom.bind((session) => {
-  sessionStorage.setItem("session", serializeSession(session));
+  saveSlice("session", serializeSession(session)).catch(() => void 0);
 });

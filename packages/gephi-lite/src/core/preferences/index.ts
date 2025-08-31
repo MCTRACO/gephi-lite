@@ -2,6 +2,7 @@ import { Producer, atom, producerToAction } from "@ouestware/atoms";
 
 import { Preferences } from "./types";
 import { getAppliedTheme, getCurrentPreferences, serializePreferences } from "./utils";
+import { saveSlice } from "../persistence/client";
 
 /**
  * Producers:
@@ -38,7 +39,7 @@ export const preferencesActions = {
  * *********
  */
 preferencesAtom.bind((preferences, prevPreferences) => {
-  localStorage.setItem("preferences", serializePreferences(preferences));
+  saveSlice("preferences", serializePreferences(preferences)).catch(() => void 0);
 
   // Apply theme change
   if (prevPreferences.theme !== preferences.theme || !document.documentElement.getAttribute("data-bs-theme")) {

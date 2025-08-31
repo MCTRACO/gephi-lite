@@ -1,5 +1,6 @@
 import { Producer, atom, producerToAction, useAtom } from "@ouestware/atoms";
 import { isNil } from "lodash";
+import { saveSlice } from "../persistence/client";
 
 import { User } from "./types";
 
@@ -28,6 +29,6 @@ export const userActions = {
  * Sync. user atom in the localstorage
  */
 userAtom.bind((user) => {
-  if (!isNil(user)) localStorage.setItem(LS_USER_KEY, JSON.stringify({ ...user, provider: user.provider.serialize() }));
-  else localStorage.removeItem(LS_USER_KEY);
+  if (!isNil(user)) saveSlice("user", { ...user, provider: user.provider.serialize() }).catch(() => void 0);
+  else saveSlice<null>("user", null).catch(() => void 0);
 });

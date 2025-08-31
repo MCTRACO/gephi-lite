@@ -1,10 +1,10 @@
-import { isNil } from "lodash";
 import { FC, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ghProviderDeserialize } from "../cloud/github/provider";
 import { useNotifications } from "../notifications";
-import { LS_USER_KEY, useConnectedUser } from "./index";
+import { useConnectedUser } from "./index";
+import { loadSlice } from "../persistence/client";
 
 /**
  * Sync user saved in localstorage with the atom.
@@ -15,24 +15,21 @@ export const AuthInit: FC = () => {
   const { notify } = useNotifications();
   const [, setUser] = useConnectedUser();
 
+  type SerializedUser = { id: string; name: string; avatar?: string; provider: string };
+
   useEffect(() => {
-    const lsUserString = localStorage.getItem(LS_USER_KEY);
-    if (!isNil(lsUserString)) {
-      try {
-        const lsUser = JSON.parse(lsUserString);
-        // TODO: need to check the validity of the user
-        // before to set it and also to find a better way to deserialize provider
-        setUser({ ...lsUser, provider: ghProviderDeserialize(lsUser.provider) });
-      } catch (e) {
-        console.error("Failed to load user from localstorage", e);
-        notify({
-          type: "warning",
-          title: `${t("gephi-lite.title")}`,
-          message: "TODO",
-        });
+    loadSlice("user")
+      .then((u: unknown) => {
+        const su = u as Partial<SerializedUser> | null;
+        if (su && typeof su.id === "string" && typeof su.name === "string" && typeof su.provider === "string") {
+          setUser({ id: su.id, name: su.name, avatar: su.avatar, provider: ghProviderDeserialize(su.provider) });
+        }
+      })
+      .catch((e) => {
+        console.error("Failed to load user from backend", e);
+        notify({ type: "warning", title: `${t("gephi-lite.title")}`, message: "User not loaded" });
         setUser(null);
-      }
-    }
+      });
   }, [setUser, notify, t]);
 
   return null;

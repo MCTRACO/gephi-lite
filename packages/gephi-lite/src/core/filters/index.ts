@@ -2,6 +2,7 @@ import { Producer, atom, producerToAction } from "@ouestware/atoms";
 import { dropRight, inRange } from "lodash";
 
 import { FilterType, FiltersState } from "./types";
+import { saveSlice } from "../persistence/client";
 import { getEmptyFiltersState, serializeFiltersState } from "./utils";
 
 /**
@@ -136,5 +137,6 @@ export const filtersActions = {
  * *********
  */
 filtersAtom.bind((filtersState) => {
-  sessionStorage.setItem("filters", serializeFiltersState(filtersState));
+  // Persist filters remotely
+  saveSlice("filters", serializeFiltersState(filtersState)).catch(() => void 0);
 });

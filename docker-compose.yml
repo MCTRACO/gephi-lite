@@ -8,3 +8,17 @@ services:
         entrypoint: /gephi-lite/entrypoint.sh
         ports:
             - 5173:5173
+    persistence:
+        image: node:lts
+        user: node
+        hostname: gephi-lite-persistence
+        working_dir: /gephi-lite/packages/persistence-server
+        volumes:
+            - .:/gephi-lite
+        command: node server.js
+        environment:
+            - PERSIST_PORT=4000
+            - PERSIST_HOST=0.0.0.0
+            - PERSIST_DATA_DIR=/gephi-lite/.persistence-data
+        ports:
+            - 4000:4000

@@ -11,26 +11,22 @@ import { graphDatasetActions, graphDatasetAtom } from "../graph";
 import { initializeGraphDataset } from "../graph/utils";
 import { resetCamera } from "../sigma";
 import { FileState, FileType, FileTypeWithoutFormat, GephiLiteFileFormat } from "./types";
+import { saveSlice } from "../persistence/client";
 import { geFullDataGraph, importGephiLiteFormat, parseFile } from "./utils";
 
 function getEmptyFileState(): FileState {
   return { current: null, recentFiles: [], status: { type: "idle" } };
 }
 
-function getLocalStorageFileState(): FileState {
-  const raw = localStorage.getItem("file");
-  const state = raw ? JSON.parse(raw) : null;
-  return {
-    ...getEmptyFileState(),
-    ...state,
-  };
+function getInitialFileState(): FileState {
+  return getEmptyFileState();
 }
 
 /**
  * Public API:
  * ***********
  */
-export const fileAtom = atom<FileState>(getLocalStorageFileState());
+export const fileAtom = atom<FileState>(getInitialFileState());
 
 /**
  * Produces :
@@ -138,5 +134,5 @@ export const fileActions = {
  * *********
  */
 fileAtom.bind((file) => {
-  localStorage.setItem("file", gephiLiteStringify(file));
+  saveSlice("file", gephiLiteStringify(file)).catch(() => void 0);
 });

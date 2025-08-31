@@ -28,6 +28,7 @@ export function FunctionEditorModal<T>(props: ModalProps<FunctionEditorModalProp
   const [code, setCode] = useState<string>(
     `${functionJsDoc}\n${value?.toString() || defaultFunction?.toString() || ""}`,
   );
+  type RangeLike = { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number };
 
   const save = useCallback(
     (run: boolean, code: string) => {
@@ -61,21 +62,24 @@ export function FunctionEditorModal<T>(props: ModalProps<FunctionEditorModalProp
           theme={getAppliedTheme(theme) === "light" ? "light" : "vs-dark"}
           defaultLanguage="javascript"
           value={code || ""}
-          onChange={(e) => {
+          onChange={(e: string | undefined) => {
             setError(null);
             setCode(e || "");
           }}
           onMount={(editor, monaco: Monaco) => {
             // Making read only the header & footer of the function
-            editor.onKeyDown((e) => {
+            editor.onKeyDown((e: { code: string; stopPropagation: () => void; preventDefault: () => void }) => {
               if (!["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(e.code)) {
                 const fnHeaderRange = new monaco.Range(0, 0, functionJsDoc.split("\n").length + 2, 0);
                 const nbLines = editor.getValue().split("\n").length;
                 const fnFooterRange = new monaco.Range(nbLines, 0, nbLines + 1, 0);
-                const contains = (editor.getSelections() ?? []).findIndex(
-                  (selection) =>
-                    fnHeaderRange.intersectRanges(selection) || fnFooterRange.intersectRanges(selection),
-                );
+                const contains = (editor.getSelections() ?? []).findIndex((selection: unknown) => {
+                  const sel = selection as RangeLike;
+                  return (
+                    (fnHeaderRange.intersectRanges as unknown as (r: RangeLike) => RangeLike | null)(sel) ||
+                    (fnFooterRange.intersectRanges as unknown as (r: RangeLike) => RangeLike | null)(sel)
+                  );
+                });
                 if (contains !== -1) {
                   e.stopPropagation();
                   e.preventDefault(); // for Ctrl+C, Ctrl+V

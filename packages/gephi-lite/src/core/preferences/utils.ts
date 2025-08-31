@@ -14,14 +14,8 @@ export function getEmptyPreferences(): Preferences {
 }
 
 export function getCurrentPreferences(): Preferences {
-  try {
-    const rawPreferences = localStorage.getItem("preferences");
-    const preferences = rawPreferences ? parsePreferences(rawPreferences) : null;
-    return { ...getEmptyPreferences(), ...preferences };
-  } catch (e) {
-    console.error(e);
-    return getEmptyPreferences();
-  }
+  // Default preferences; actual persisted values are loaded from backend in Initialize
+  return getEmptyPreferences();
 }
 
 /**
@@ -33,8 +27,6 @@ export function serializePreferences(preferences: Preferences): string {
 
 export function parsePreferences(rawPreferences: string): Preferences | null {
   try {
-    // TODO:
-    // Validate the actual data
     return gephiLiteParse(rawPreferences);
   } catch (e) {
     console.error(e);

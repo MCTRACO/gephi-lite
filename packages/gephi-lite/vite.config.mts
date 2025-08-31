@@ -41,6 +41,10 @@ export default defineConfig({
     host: process.env.VITE_HOST || "localhost",
     allowedHosts: process.env.VITE_ALLOWED_HOSTS?.split(","),
     proxy: {
+      "^/api/*": {
+        target: process.env.VITE_PERSISTENCE_URL || "http://localhost:4000",
+        changeOrigin: true,
+      },
       "^/_github/*": {
         target: "https://github.com",
         changeOrigin: true,

@@ -1,5 +1,6 @@
 import { getEmptyAppearanceState, serializeAppearanceState } from "@gephi/gephi-lite-sdk";
 import { Producer, atom, producerToAction } from "@ouestware/atoms";
+import { saveSlice } from "../persistence/client";
 
 import { ItemType } from "../types";
 import {
@@ -106,5 +107,5 @@ export const appearanceActions = {
  * *********
  */
 appearanceAtom.bind((appearanceState) => {
-  sessionStorage.setItem("appearance", serializeAppearanceState(appearanceState));
+  saveSlice("appearance", serializeAppearanceState(appearanceState)).catch(() => void 0);
 });
