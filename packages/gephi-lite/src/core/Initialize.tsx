@@ -9,7 +9,6 @@ import { WelcomeModal } from "../views/graphPage/modals/WelcomeModal";
 import { appearanceAtom } from "./appearance";
 import { useBroadcast } from "./broadcast/useBroadcast";
 import { useFileActions, useGraphDatasetActions } from "./context/dataContexts";
-import { fileAtom } from "./file";
 import { filtersAtom } from "./filters";
 import { parseFiltersState } from "./filters/utils";
 import { graphDatasetAtom } from "./graph";
@@ -21,7 +20,6 @@ import { getCurrentPreferences } from "./preferences/utils";
 import { sessionAtom } from "./session";
 import { getEmptySession, parseSession } from "./session/utils";
 import { resetCamera } from "./sigma";
-import { globalStorage } from "./storage/globalStorage";
 import { AuthInit } from "./user/AuthInit";
 
 // This awful flag helps to deal with the double rendering caused from
@@ -72,36 +70,15 @@ export const Initialize: FC<PropsWithChildren<unknown>> = ({ children }) => {
     if (isInitialized) return;
     isInitialized = true;
 
-    // Load session from global storage
-    try {
-      const rawSession = await globalStorage.getItem<string>("session");
-      const parsedSession = rawSession ? parseSession(rawSession) : null;
-      sessionAtom.set(parsedSession ?? getEmptySession());
-    } catch (error) {
-      console.warn("Failed to load session from global storage:", error);
-      sessionAtom.set(getEmptySession());
-    }
+    // Load session from local storage
+    sessionAtom.set(() => {
+      const raw = sessionStorage.getItem("session");
+      const parsed = raw ? parseSession(raw) : null;
+      return parsed ?? getEmptySession();
+    });
 
-    // Load preferences from global storage
-    try {
-      const rawPreferences = await globalStorage.getItem<string>("preferences");
-      const preferences = rawPreferences ? JSON.parse(rawPreferences) : getCurrentPreferences();
-      preferencesAtom.set(preferences);
-    } catch (error) {
-      console.warn("Failed to load preferences from global storage:", error);
-      preferencesAtom.set(getCurrentPreferences());
-    }
-
-    // Load file state from global storage
-    try {
-      const rawFile = await globalStorage.getItem<string>("file");
-      if (rawFile) {
-        const fileState = JSON.parse(rawFile);
-        fileAtom.set(fileState);
-      }
-    } catch (error) {
-      console.warn("Failed to load file state from global storage:", error);
-    }
+    // Load preferences from local storage
+    preferencesAtom.set(getCurrentPreferences());
 
     // Load a graph
     // ~~~~~~~~~~~~
@@ -151,29 +128,25 @@ export const Initialize: FC<PropsWithChildren<unknown>> = ({ children }) => {
     }
 
     if (!graphFound) {
-      // Load data from global storage
-      try {
-        const rawDataset = await globalStorage.getItem<string>("dataset");
-        const rawFilters = await globalStorage.getItem<string>("filters");
-        const rawAppearance = await globalStorage.getItem<string>("appearance");
+      // Load data from session storage
+      const rawDataset = sessionStorage.getItem("dataset");
+      const rawFilters = sessionStorage.getItem("filters");
+      const rawAppearance = sessionStorage.getItem("appearance");
 
-        if (rawDataset) {
-          const dataset = parseDataset(rawDataset);
+      if (rawDataset) {
+        const dataset = parseDataset(rawDataset);
 
-          if (dataset) {
-            const appearance = rawAppearance ? parseAppearanceState(rawAppearance) : null;
-            const filters = rawFilters ? parseFiltersState(rawFilters) : null;
+        if (dataset) {
+          const appearance = rawAppearance ? parseAppearanceState(rawAppearance) : null;
+          const filters = rawFilters ? parseFiltersState(rawFilters) : null;
 
-            graphDatasetAtom.set(dataset);
-            filtersAtom.set((prev) => filters || prev);
-            appearanceAtom.set((prev) => appearance || prev);
-            resetCamera({ forceRefresh: true });
+          graphDatasetAtom.set(dataset);
+          filtersAtom.set((prev) => filters || prev);
+          appearanceAtom.set((prev) => appearance || prev);
+          resetCamera({ forceRefresh: true });
 
-            if (dataset.fullGraph.order > 0) showWelcomeModal = false;
-          }
+          if (dataset.fullGraph.order > 0) showWelcomeModal = false;
         }
-      } catch (error) {
-        console.warn("Failed to load data from global storage:", error);
       }
     }
 

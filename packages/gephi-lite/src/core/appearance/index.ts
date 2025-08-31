@@ -1,7 +1,6 @@
 import { getEmptyAppearanceState, serializeAppearanceState } from "@gephi/gephi-lite-sdk";
 import { Producer, atom, producerToAction } from "@ouestware/atoms";
 
-import { globalStorage } from "../storage/globalStorage";
 import { ItemType } from "../types";
 import {
   AppearanceState,
@@ -106,10 +105,6 @@ export const appearanceActions = {
  * Bindings:
  * *********
  */
-appearanceAtom.bind(async (appearanceState) => {
-  try {
-    await globalStorage.setItem("appearance", serializeAppearanceState(appearanceState));
-  } catch (error) {
-    console.warn("Failed to save appearance to global storage:", error);
-  }
+appearanceAtom.bind((appearanceState) => {
+  sessionStorage.setItem("appearance", serializeAppearanceState(appearanceState));
 });

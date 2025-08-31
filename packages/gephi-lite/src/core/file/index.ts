@@ -10,7 +10,6 @@ import { filtersAtom } from "../filters";
 import { graphDatasetActions, graphDatasetAtom } from "../graph";
 import { initializeGraphDataset } from "../graph/utils";
 import { resetCamera } from "../sigma";
-import { globalStorage } from "../storage/globalStorage";
 import { FileState, FileType, FileTypeWithoutFormat, GephiLiteFileFormat } from "./types";
 import { geFullDataGraph, importGephiLiteFormat, parseFile } from "./utils";
 
@@ -18,11 +17,20 @@ function getEmptyFileState(): FileState {
   return { current: null, recentFiles: [], status: { type: "idle" } };
 }
 
+function getLocalStorageFileState(): FileState {
+  const raw = localStorage.getItem("file");
+  const state = raw ? JSON.parse(raw) : null;
+  return {
+    ...getEmptyFileState(),
+    ...state,
+  };
+}
+
 /**
  * Public API:
  * ***********
  */
-export const fileAtom = atom<FileState>(getEmptyFileState());
+export const fileAtom = atom<FileState>(getLocalStorageFileState());
 
 /**
  * Produces :
@@ -129,10 +137,6 @@ export const fileActions = {
  * Bindings:
  * *********
  */
-fileAtom.bind(async (file) => {
-  try {
-    await globalStorage.setItem("file", gephiLiteStringify(file));
-  } catch (error) {
-    console.warn("Failed to save file to global storage:", error);
-  }
+fileAtom.bind((file) => {
+  localStorage.setItem("file", gephiLiteStringify(file));
 });

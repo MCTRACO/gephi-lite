@@ -1,6 +1,5 @@
 import { Producer, atom, producerToAction } from "@ouestware/atoms";
 
-import { globalStorage } from "../storage/globalStorage";
 import { Preferences } from "./types";
 import { getAppliedTheme, getCurrentPreferences, serializePreferences } from "./utils";
 
@@ -38,12 +37,8 @@ export const preferencesActions = {
  * Bindings:
  * *********
  */
-preferencesAtom.bind(async (preferences, prevPreferences) => {
-  try {
-    await globalStorage.setItem("preferences", serializePreferences(preferences));
-  } catch (error) {
-    console.warn("Failed to save preferences to global storage:", error);
-  }
+preferencesAtom.bind((preferences, prevPreferences) => {
+  localStorage.setItem("preferences", serializePreferences(preferences));
 
   // Apply theme change
   if (prevPreferences.theme !== preferences.theme || !document.documentElement.getAttribute("data-bs-theme")) {

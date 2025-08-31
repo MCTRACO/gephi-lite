@@ -1,7 +1,6 @@
 import { Producer, atom, producerToAction } from "@ouestware/atoms";
 import { dropRight, inRange } from "lodash";
 
-import { globalStorage } from "../storage/globalStorage";
 import { FilterType, FiltersState } from "./types";
 import { getEmptyFiltersState, serializeFiltersState } from "./utils";
 
@@ -136,10 +135,6 @@ export const filtersActions = {
  * Bindings:
  * *********
  */
-filtersAtom.bind(async (filtersState) => {
-  try {
-    await globalStorage.setItem("filters", serializeFiltersState(filtersState));
-  } catch (error) {
-    console.warn("Failed to save filters to global storage:", error);
-  }
+filtersAtom.bind((filtersState) => {
+  sessionStorage.setItem("filters", serializeFiltersState(filtersState));
 });

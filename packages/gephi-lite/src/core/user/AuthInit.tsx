@@ -4,11 +4,10 @@ import { useTranslation } from "react-i18next";
 
 import { ghProviderDeserialize } from "../cloud/github/provider";
 import { useNotifications } from "../notifications";
-import { globalStorage } from "../storage/globalStorage";
 import { LS_USER_KEY, useConnectedUser } from "./index";
 
 /**
- * Sync user saved in global storage with the atom.
+ * Sync user saved in localstorage with the atom.
  * Used when the application is loaded.
  */
 export const AuthInit: FC = () => {
@@ -17,17 +16,15 @@ export const AuthInit: FC = () => {
   const [, setUser] = useConnectedUser();
 
   useEffect(() => {
-    const loadUser = async () => {
+    const lsUserString = localStorage.getItem(LS_USER_KEY);
+    if (!isNil(lsUserString)) {
       try {
-        const lsUserString = await globalStorage.getItem<string>(LS_USER_KEY);
-        if (!isNil(lsUserString)) {
-          const lsUser = JSON.parse(lsUserString);
-          // TODO: need to check the validity of the user
-          // before to set it and also to find a better way to deserialize provider
-          setUser({ ...lsUser, provider: ghProviderDeserialize(lsUser.provider) });
-        }
+        const lsUser = JSON.parse(lsUserString);
+        // TODO: need to check the validity of the user
+        // before to set it and also to find a better way to deserialize provider
+        setUser({ ...lsUser, provider: ghProviderDeserialize(lsUser.provider) });
       } catch (e) {
-        console.error("Failed to load user from global storage", e);
+        console.error("Failed to load user from localstorage", e);
         notify({
           type: "warning",
           title: `${t("gephi-lite.title")}`,
@@ -35,9 +32,7 @@ export const AuthInit: FC = () => {
         });
         setUser(null);
       }
-    };
-
-    loadUser();
+    }
   }, [setUser, notify, t]);
 
   return null;
