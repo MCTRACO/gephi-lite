@@ -23,6 +23,7 @@ import { SearchState } from "../search/types";
 import { selectionAtom } from "../selection";
 import { SelectionState } from "../selection/types";
 import { getEmptySelectionState } from "../selection/utils";
+import { globalStorage } from "../storage/globalStorage";
 import { ItemType } from "../types";
 import { computeAllDynamicAttributes, dynamicAttributes } from "./dynamicAttributes";
 import { DynamicItemData, FieldModel, GraphDataset, SigmaGraph } from "./types";
@@ -371,13 +372,15 @@ graphDatasetAtom.bind((graphDataset, previousGraphDataset) => {
     document.title = ["Gephi Lite", graphDataset.metadata.title].filter((s) => !isNil(s)).join(" - ");
   }
 
-  // Only "small enough" graphs are stored in the sessionStorage, because this
+  // Only "small enough" graphs are stored in the global storage, because this
   // feature only helps to resist page reloads, basically:
   if (graphDataset.fullGraph.order < 5000 && graphDataset.fullGraph.size < 25000) {
     try {
-      sessionStorage.setItem("dataset", datasetToString(graphDataset));
+      globalStorage.setItem("dataset", datasetToString(graphDataset)).catch(() => {
+        // Ignore errors - global storage is optional
+      });
     } catch (_e) {
-      // nothing todo
+      // nothing to do
     }
   }
 });
