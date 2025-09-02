@@ -51,8 +51,7 @@ jobs:
       # ✅ Nuevo paso: compilar la app antes de docker build
       - name: Build gephi-lite
         run: |
-          cd packages/gephi-lite
-          npm ci
+          npm install
           npm run build
 
       - name: Build and push Docker image
