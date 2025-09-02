@@ -5,6 +5,7 @@ import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
 
 import { BASE_URL } from "../../config";
+import { sessionPersistence } from "./vite-plugin-session-persistence";
 
 export default defineConfig({
   base: BASE_URL,
@@ -12,6 +13,10 @@ export default defineConfig({
     UnpluginTypia({}),
     react(),
     svgr(),
+    sessionPersistence({
+      sessionFile: './gephi-session.json',
+      syncInterval: 5000
+    }),
     checker({
       typescript: {
         buildMode: true,

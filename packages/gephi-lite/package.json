@@ -108,6 +108,7 @@
     "@types/seedrandom": "^3.0.8",
     "@types/tether": "^1.4.9",
     "@vitejs/plugin-react-swc": "^3.7.2",
+    "fs-extra": "^11.2.0",
     "http-proxy-middleware": "^3.0.3",
     "i18next-scanner": "^4.6.0",
     "sass": "1.77.6",
