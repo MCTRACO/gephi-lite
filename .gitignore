@@ -30,3 +30,5 @@ playwright-report/
 playwright/.cache/
 tsconfig.tsbuildinfo
 **/__screenshots__
+
+packages/gephi-lite/gephi-session.json
